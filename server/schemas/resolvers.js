@@ -2,10 +2,15 @@ const { Book } = require('../models/Book');
 
 const resolvers = {
   Query: {
-    book: async () => {
-      return Book.find({}).sort({ bookId: -1 });
+    me: async (parent, args, context) => {
+        if(context.user) {
+            const userData = await User.findOne({}).select('-__v -password');
+            return userData;
+        }
+        throw new AuthenticationError('Not logged in');
     }
-  }
+  },
+  
 };
 
 module.exports = resolvers;
