@@ -1,4 +1,6 @@
-const { Book } = require('../models/Book');
+const { AuthenticationError } = require('apollo-server-express');
+const { signToken } = require('../utils/auth');
+const { User } = require('../models/Book');
 
 const resolvers = {
   Query: {
@@ -10,6 +12,30 @@ const resolvers = {
         throw new AuthenticationError('Not logged in');
     }
   },
+
+  Mutation: { 
+    addUser: async (parent, args) => {
+      const user = await User.create(args);
+      const token = signToken(user);
+
+      return { token, user };
+    },
+    login: async (_, { email, password }) => {
+      const user = await User.findOne({ email });
+
+      if(!user) {
+        throw new AuthenticationError('Wrong password or username');
+      }
+
+      const correctPassword = await user.isCorrectPassword(password);
+        if(!correctPassword) {
+          throw new AuthenticationError('Wrong password or username');
+        }
+        const token = signToken(user);
+        return { token, user };
+    }
+
+  }
   
 };
 
